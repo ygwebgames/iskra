@@ -5395,12 +5395,14 @@ function endDay(){
   saveProgress();
 }
 const CUTSCENE_DELAY_MS = 2600;
+var csWaiting = 0;
 function maybeShowCutscene(mailId){
   const hintId = pendingCutscene[mailId];
   if(!hintId) return;
   delete pendingCutscene[mailId];
   saveProgress();
-  setTimeout(() => showCutscene(hintId), CUTSCENE_DELAY_MS);
+  csWaiting++;
+  setTimeout(() => { csWaiting = Math.max(0, csWaiting - 1); showCutscene(hintId); }, CUTSCENE_DELAY_MS);
 }
 function showCutscene(hintId){
   const a = HINTS.find(x => x.id === hintId);
@@ -5443,6 +5445,16 @@ function fireDelivery(uid){
   if(badEnding) return;
   const d = pendingDeliveries[uid];
   if(!d) return;
+  /* 다음 의뢰 메일은 '하루가 끝난 뒤'(컷씬을 닫은 뒤)에 옴. 다나의 결과 메시지에 아직 답하지 않았으면 컷씬부터 띄움 */
+  if(/^assign\d$/.test(d.mailId || '')){
+    const resFire = o => /^result:/.test(o.fire || '');
+    const unanswered = (msgState.ackO || []).some(resFire) || (msgState.chain || []).some(it => (it.o || []).some(resFire));
+    const ov = document.getElementById('cutsceneOverlay');
+    if(unanswered || csWaiting > 0 || (ov && ov.classList.contains('show'))){
+      if(unanswered) msgClearOpts();
+      d.due = Date.now() + 4000; armTimer(uid, 4000); return;
+    }
+  }
   delete pendingDeliveries[uid];
   if(d.pendingFlag) setFlag(d.pendingFlag, false);
   if(d.resolvedFlag) setFlag(d.resolvedFlag, true);
@@ -7713,7 +7725,7 @@ function msgDoubt(){
   const w = Math.min(2600, 650 + D.ex[k].length * 22);
   msgBotSay(D.ex[k]);
   msgStartChain([{x: press, o: [
-    {r: '…알겠어요, 할게요', re: D.yesRe},
+    {r: '…알겠어요, 할게요', re: (k >= 2 ? '알겠습니다. 다시 정리해 드리겠습니다.' : '좋아요. 그럼 할 일을 다시 정리해 드릴게요.') + '\n\n' + MSG_STAGES[n].now},
     {r: D.no, re: '…그러십니까. 알겠습니다. 그동안 수고하셨습니다.', bad: 'quit', fire: 'bad:quit'}
   ]}], w + 700);
   msgSave();
@@ -7887,7 +7899,8 @@ function applyJump(n){
   [[117,1],[118,2],[122,3],[124,4],[125,5],[126,7]].forEach(pair => { if(n >= pair[1]) addDynamicArticle(pair[0]); });
   /* 메신저: 인트로는 끝난 상태에서 이번 차수 안내만 시작 */
   msgState = {log:[], unread:0, hintLevel:{}, seenMail:{}, greeted:true, followup:false, chain:[], ackO:[], ackIdx:0};
-  ['tutorial1','assign1','assign2','assign3','assign4','assign5','assign6','assign7','assign8','contact1'].forEach(id => { msgState.seenMail[id] = 1; });
+  past.forEach(m => { msgState.seenMail[m.id] = 1; });   /* 지난 차수만 '본 메일'로. 다음 차수 의뢰가 오면 다나가 다시 안내 */
+  if(n >= 6) msgState.seenMail.contact1 = 1;
   msgPush('bot', "베타 테스트 구간 이동으로 " + n + "차 시점부터 시작했어요 :)", true);
   msgState.seenMail[cur.id] = 0;
   TABS = TABS.filter(t => t.kind === 'oldmail' || t.kind === 'search');
