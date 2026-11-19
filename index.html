@@ -4742,7 +4742,7 @@ function renderList(){
       <span class="dot"></span>
       <svg class="ic star" viewBox="0 0 24 24"><path d="m12 3 2.6 5.9 6.4.6-4.9 4.3 1.5 6.3L12 17l-5.6 3.1 1.5-6.3-4.9-4.3 6.4-.6L12 3Z"/></svg>
       <span class="sender">${m.sender}</span>
-      <span class="subjwrap"><b>${m.subject}</b><span class="prev">${m.preview}</span></span>
+      <span class="subjwrap"><b>${m.subject}</b><span class="prev">${mailPrev(m)}</span></span>
       <span class="date">${mailTimeLabel(m)}</span>
     </div>
   `).join('');
@@ -4774,6 +4774,11 @@ document.getElementById('foldernav').addEventListener('click', (e) => {
   saveProgress();
 });
 
+/* 목록 미리보기: 실제 본문 앞부분, 40자 넘으면 ... */
+function mailPrev(m){
+  const t = (m.body || []).join(' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  return t.length > 40 ? t.slice(0, 40).trim() + '...' : t;
+}
 function openDetail(folder, id){
   const m = FOLDERS[folder].find(x => x.id === id);
   if(!m) return;
@@ -5315,7 +5320,7 @@ function omRenderList(){
     <div class="omrow ${m.unread ? 'unread' : ''}${omCurId === m.id && omDesk() ? ' sel' : ''}" onclick="omOpenDetail('${m.id}')">
       <span class="omdot"></span>
       <span class="omsender">${m.sender}</span>
-      <span class="omsubjwrap"><b>${m.subject}</b><span class="omprev">${m.preview || ''}</span></span>
+      <span class="omsubjwrap"><b>${m.subject}</b><span class="omprev">${mailPrev(m)}</span></span>
       <span class="omdate">${omLabel(m)}</span>
     </div>
   `).join('');
