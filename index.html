@@ -7543,10 +7543,12 @@ function msgSetOpts(item){
 /* 메일로 새 의뢰/결과가 오면 아직 안 끝난 옛 대화는 정리하고(걸려 있던 입금·컷씬 같은 이벤트는 실행) 새 대화로 넘어감 */
 function msgFlushPending(){
   const fires = [];
-  (msgState.ackO || []).forEach(o => { if(o.fire && fires.indexOf(o.fire) < 0) fires.push(o.fire); });
+  /* 어느 답을 골라도 일어나는 이벤트(입금·컷씬)만 실행. 특정 답에만 걸린 이벤트(배드엔딩 등)는 고르지 않았으니 버림 */
+  const common = os => { os = os || []; if(!os.length) return; const f = os[0].fire; if(f && f.indexOf('bad:') !== 0 && os.every(o => o.fire === f) && fires.indexOf(f) < 0) fires.push(f); };
+  common(msgState.ackO);
   (msgState.chain || []).forEach(it => {
     if(it.dep) depositReward(it.dep);
-    (it.o || []).forEach(o => { if(o.fire && fires.indexOf(o.fire) < 0) fires.push(o.fire); });
+    common(it.o);
   });
   msgState.ackO = []; msgState.chain = [];
   fires.forEach(f => setTimeout(() => msgFire(f), 1500));
