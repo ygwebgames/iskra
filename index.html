@@ -1736,6 +1736,15 @@ body.nm-long #panel-report .rv-seal{width:auto;min-width:40px;padding:0 6px;bord
 #panel-oldmail .omsetup::before{left:min(calc(100% - 440px), calc(50% + 50px));top:0;background:radial-gradient(closest-side,rgba(240,140,92,.19) 0%,rgba(240,140,92,.12) 30%,rgba(240,140,92,.06) 55%,rgba(240,140,92,.02) 78%,rgba(240,140,92,0) 100%);}   /* 카드 오른쪽 위 */
 #panel-oldmail .omsetup::after{left:max(0px, calc(50% - 500px));top:340px;background:radial-gradient(closest-side,rgba(226,108,88,.14) 0%,rgba(226,108,88,.09) 30%,rgba(226,108,88,.045) 55%,rgba(226,108,88,.015) 78%,rgba(226,108,88,0) 100%);}   /* 카드 왼쪽 아래 */
 #panel-oldmail .omsetup > *{position:relative;z-index:1;}
+#panel-oldmail .oms-notice{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(40,30,30,.28);animation:omsNIn .18s ease-out;}
+#panel-oldmail .oms-notice.hidden{display:none;}
+#panel-oldmail .oms-ncard{width:100%;max-width:440px;box-sizing:border-box;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.14);padding:28px 30px 24px;}
+#panel-oldmail .oms-nt{margin:0 0 14px;font-size:16px;font-weight:700;color:var(--ink);}
+#panel-oldmail .oms-nl{margin:0 0 22px;padding:0 0 0 18px;font-size:13px;line-height:1.65;color:var(--ink);}
+#panel-oldmail .oms-nl li{margin:0 0 8px;word-break:keep-all;}
+#panel-oldmail .oms-nl li::marker{color:var(--muted);}
+@keyframes omsNIn{from{opacity:0;}to{opacity:1;}}
+@media (max-width:560px){#panel-oldmail .oms-ncard{padding:22px 18px 18px;border-radius:16px;}#panel-oldmail .oms-nl{font-size:12.5px;}}
 #panel-oldmail .oms-card{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:none;box-shadow:0 20px 50px rgba(0,0,0,.08);}
 @media (max-width:560px){#panel-oldmail .omsetup::before,#panel-oldmail .omsetup::after{width:280px;height:280px;}#panel-oldmail .omsetup::before{left:calc(100% - 280px);top:0;}#panel-oldmail .omsetup::after{left:0;top:300px;}}   /* 번짐은 영역 안에서만(잘리는 경계·가로 스크롤 없음) */
 @media (max-width:860px){#panel-oldmail .omreader{background:#FFFFFF;border-radius:16px;padding:18px 16px 8px;}}
@@ -2765,6 +2774,21 @@ body.nm-long #panel-report .rv-seal{width:auto;min-width:40px;padding:0 6px;bord
     </form>
     <div class="oms-banner" aria-hidden="true"><small>노을메일 플러스</small><b>대용량 첨부 2배</b><em>11월 한 달, 첨부 용량을 두 배로 드려요</em><span class="sun"></span><span class="hz"></span></div>
     <div class="oms-foot"><div class="fl"><span>이용약관</span><span>개인정보처리방침</span><span>도렌어</span></div><p class="cp">© Noeul Corp.</p></div>
+    <div class="oms-notice hidden" id="omsNotice" role="dialog" aria-modal="true" aria-labelledby="omsNoticeT">
+      <div class="oms-ncard">
+        <p class="oms-nt" id="omsNoticeT">시작하기 전에 확인해 주세요</p>
+        <ul class="oms-nl">
+          <li>이 게임에 나오는 나라, 단체, 사이트, 인물은 모두 가상입니다. 실제와는 관계가 없습니다.</li>
+          <li>실제 비밀번호나 개인정보는 입력하지 마세요. 입력한 내용은 이 브라우저에만 저장되고, 어디로도 전송되지 않습니다.</li>
+          <li>게임 속 메일 중에는 스팸이나 피싱처럼 보이는 메일이 있습니다. 모두 연출이며 실제로 연결되지 않습니다.</li>
+          <li>배경음악이 재생되고, 화면 안에 알림이 뜹니다.</li>
+        </ul>
+        <div class="oms-btns">
+          <button type="button" class="oms-def" onclick="omNoticeClose()">취소</button>
+          <button type="button" class="oms-ok" onclick="omNoticeOk()">확인했어요</button>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="omlistwrap hidden" id="omListWrap">
    <div class="omsplit">
@@ -6560,6 +6584,15 @@ function omSetupPreview(){ document.getElementById('omsErr').textContent = ''; }
 function omSetupOk(){
   const v = document.getElementById('omsName').value.trim() || NAME_DEFAULT;
   if(!/^[가-힣A-Za-z]{1,6}$/.test(v)){ document.getElementById('omsErr').textContent = '이름은 한글이나 영문 1~6자로 입력해 주세요.'; return; }
+  omNoticeName = v;
+  document.getElementById('omsNotice').classList.remove('hidden');
+}
+/* 시작 전 안내(가상 세계·개인정보·연출 메일·소리) → 확인하면 시작 */
+var omNoticeName = '';
+function omNoticeClose(){ document.getElementById('omsNotice').classList.add('hidden'); }
+function omNoticeOk(){
+  omNoticeClose();
+  const v = omNoticeName || NAME_DEFAULT;
   playerName = v;
   try{ localStorage.setItem(NAME_KEY, v); }catch(e){}
   nameApply();
