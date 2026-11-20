@@ -4636,6 +4636,7 @@ function renderScrapWidget(){
 const BGM_TRACKS = {
   iskra:   {file:'bgm/iskra.mp3',   title:'iskra 테마'},
   oldmail: {file:'bgm/noeul.mp3',   title:'noeulmail 테마'},
+  login:   {file:'bgm/login.mp3',   title:'noeulmail 로그인'},
   raden:   {file:'bgm/raden.mp3',   title:'라덴통상 ERP'},
   orginfo: {file:'bgm/orginfo.mp3', title:'단체정보마당'},
   alumni:  {file:'bgm/alumni.mp3',  title:'총동문회'},
@@ -4673,6 +4674,7 @@ function bgmTargetKey(){
     if(ov && !ov.classList.contains('hidden') && endingKey) return 'ending';   /* 엔딩·배드엔딩 화면 */
     if(iskraTabDown(TABS.find(x => x.id === activeId)) || (activeKind() === 'board' && endingChosen === 'A')) return 'silent';   /* 연결 실패 화면 */
     if(activeKind() === 'report') return rpView === 'orig' ? 'reveal' : 'results';   /* 결과 확인서 겉면 / 원본 */
+    if(activeKind() === 'oldmail'){ const su = document.getElementById('omSetup'); if(su && !su.classList.contains('hidden')) return 'login'; }   /* 이름 정하기(로그인) 화면 */
   }catch(e){}
   return BGM_KIND[activeKind()] || 'iskra';
 }
@@ -6576,6 +6578,7 @@ function omGateClick(){
   if(omOpened){ omOpenMail(); return; }
   document.getElementById('omGate').classList.add('hidden');
   document.getElementById('omSetup').classList.remove('hidden');
+  try{ bgmSync(); }catch(e){}
   { const br = document.querySelector('#omTop .ombrand'), host = document.getElementById('omsBrand'); if(br && host && !host.innerHTML) host.innerHTML = br.innerHTML; }
   const inp = document.getElementById('omsName'); inp.value = playerName; omSetupPreview();
   setTimeout(() => { try{ inp.focus(); inp.select(); }catch(e){} }, 60);
@@ -6597,6 +6600,7 @@ function omNoticeOk(){
   try{ localStorage.setItem(NAME_KEY, v); }catch(e){}
   nameApply();
   document.getElementById('omSetup').classList.add('hidden');
+  try{ bgmSync(); }catch(e){}
   omOpenMail();
 }
 var DLT_ROWS = [{"id": "d1", "date": "2026-10-28", "kind": "물류", "addr": "서쪽 회관 지하 보일러실", "party": "도렌난방설비", "note": "난방 점검 부품 납품", "sign": "수령 확인: 루카 발렌 (관리인)"}, {"id": "d2", "date": "2026-10-21", "kind": "통신", "addr": "서쪽 회관 지하 내선 12", "party": "연합회 사무국", "note": "정기 통화 (3분)", "sign": "응답자: 미기재"}, {"id": "d3", "date": "2026-10-14", "kind": "물류", "addr": "서쪽 회관 1층 로비", "party": "한결사무용품", "note": "복사용지 납품", "sign": "수령 확인: 사무국 직원"}, {"id": "d4", "date": "2026-10-09", "kind": "통신", "addr": "서쪽 회관 대표 회선", "party": "상회 사무실", "note": "정기 통화 (1분)", "sign": "응답자: 사무국"}, {"id": "d5", "date": "2026-09-30", "kind": "물류", "addr": "서쪽 회관 2층 회의실", "party": "도렌케이터링", "note": "다과 납품", "sign": "수령 확인: 사무국 직원"}, {"id": "d6", "date": "2026-10-25", "kind": "물류", "addr": "북쪽 창고 3동", "party": "도렌평야 영농조합", "note": "쌀 포대 입고", "sign": "수령 확인: 창고 근무자"}, {"id": "d7", "date": "2026-10-19", "kind": "통신", "addr": "북쪽 창고 사무실", "party": "상회 사무실", "note": "재고 확인 통화", "sign": "응답자: 창고 근무자"}, {"id": "d8", "date": "2026-10-17", "kind": "물류", "addr": "연합회 본관 1층", "party": "도렌난방설비", "note": "난방유 납품", "sign": "수령 확인: 경비"}, {"id": "d9", "date": "2026-10-12", "kind": "통신", "addr": "연합회 본관 대표 회선", "party": "이스크라 부동산", "note": "매물 문의 (2분)", "sign": "응답자: 사무국"}, {"id": "d10", "date": "2026-10-06", "kind": "물류", "addr": "마렌 거리 44, 2층", "party": "한결사무용품", "note": "우편물 수령", "sign": "수령 확인: 사무실 직원"}];
